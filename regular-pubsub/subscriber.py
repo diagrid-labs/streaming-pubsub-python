@@ -25,10 +25,10 @@ start_time = 0
 counter = 0
 counter_lock = Lock()
 TOPIC_NAME = 'my_topic'
-PUBSUB_NAME = 'my_pubsub'
+pubsub_name = 'my_pubsub'
 
 
-@app.subscribe(pubsub_name=PUBSUB_NAME, topic=TOPIC_NAME)
+@app.subscribe(pubsub_name=pubsub_name, topic=TOPIC_NAME)
 def mytopic(event: v1.Event) -> TopicEventResponse:
     global start_time
 

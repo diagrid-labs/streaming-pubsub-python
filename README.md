@@ -42,7 +42,7 @@ dapr run --app-id python-subscriber --app-protocol grpc --app-port 50051 --resou
 3. Run the subscriber with streaming subscription
 ```bash
 cd streaming-pubsub
- dapr run --app-id python-subscriber --resources-path=../components -- python3 subscriber.py
+dapr run --app-id python-subscriber --resources-path=../components -- python3 subscriber.py
 ```
 
 ## Monitoring the Benchmark

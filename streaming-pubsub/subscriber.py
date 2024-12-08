@@ -19,7 +19,7 @@ def process_message(message):
 
     if counter == 0:
         start_time = time.time()
-        total_messages = int(message.data()["cnt"])
+        total_messages = int(data["cnt"])
     counter += 1
 
 

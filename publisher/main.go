@@ -27,9 +27,9 @@ var (
 	// Configuration variables
 	pubsubName            = "my_pubsub"
 	topicName             = "my_topic"
-	numCycles             = 1
-	numGoRoutinesPerCycle = 1
-	numMessagesPerCall    = 1
+	numCycles             = 10
+	numGoRoutinesPerCycle = 10
+	numMessagesPerCall    = 10
 	totalMsgCnt           = numCycles * numGoRoutinesPerCycle * numMessagesPerCall
 )
 
