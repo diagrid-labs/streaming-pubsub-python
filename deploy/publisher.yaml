@@ -1,0 +1,36 @@
+# deployments/publisher-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: publisher
+  namespace: default
+  labels:
+    app: publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: publisher
+  template:
+    metadata:
+      labels:
+        app: publisher
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "publisher"
+    spec:
+      containers:
+      - name: publisher
+        image: publisher:latest
+        imagePullPolicy: Never
+        env:
+        - name: PUBSUB_NAME
+          value: "mypubsub" 
+        - name: TOPIC_NAME
+          value: "mytopic" 
+        - name: NUM_CYCLES
+          value: "0"
+        - name: NUM_GOROUTINES_PER_CYCLE
+          value: "1"
+        - name: NUM_MESSAGES_PER_CALL
+          value: "1"

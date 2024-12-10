@@ -1,0 +1,30 @@
+# deployments/streaming-subscriber-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-subscriber
+  namespace: default
+  labels:
+    app: streaming-subscriber
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming-subscriber
+  template:
+    metadata:
+      labels:
+        app: streaming-subscriber
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "streaming-subscriber"
+    spec:
+      containers:
+      - name: streaming-subscriber
+        image: streaming-subscriber:latest
+        imagePullPolicy: Never
+        env:
+        - name: PUBSUB_NAME
+          value: "mypubsub"  # Reference to the Dapr pubsub component
+        - name: TOPIC_NAME
+          value: "mytopic"  # Reference to the Dapr pubsub topic

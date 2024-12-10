@@ -17,23 +17,61 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	dapr "github.com/dapr/go-sdk/client"
 )
 
-var (
-	// Configuration variables
-	pubsubName            = "my_pubsub"
-	topicName             = "my_topic"
-	numCycles             = 10
-	numGoRoutinesPerCycle = 10
-	numMessagesPerCall    = 10
-	totalMsgCnt           = numCycles * numGoRoutinesPerCycle * numMessagesPerCall
-)
+type benchmarkConfig struct {
+	pubsubName            string
+	topicName             string
+	numCycles             int
+	numGoRoutinesPerCycle int
+	numMessagesPerCall    int
+	totalMsgCnt           int
+}
+
+func (b *benchmarkConfig) Init() error {
+	b.pubsubName = os.Getenv("PUBSUB_NAME")
+	if b.pubsubName == "" {
+		return fmt.Errorf("PUBSUB_NAME is not set")
+	}
+	b.topicName = os.Getenv("TOPIC_NAME")
+	if b.topicName == "" {
+		return fmt.Errorf("TOPIC_NAME is not set")
+	}
+
+	var err error
+	b.numCycles, err = strconv.Atoi(os.Getenv("NUM_CYCLES"))
+	if err != nil {
+		return fmt.Errorf("Failed to parse NUM_CYCLES: %v", err)
+	}
+	fmt.Println("b.numCycles", b.numCycles)
+
+	b.numGoRoutinesPerCycle, err = strconv.Atoi(os.Getenv("NUM_GOROUTINES_PER_CYCLE"))
+	if err != nil {
+		return fmt.Errorf("Failed to parse NUM_GOROUTINES_PER_CYCLE: %v", err)
+	}
+
+	b.numMessagesPerCall, err = strconv.Atoi(os.Getenv("NUM_MESSAGES_PER_CALL"))
+	if err != nil {
+		return fmt.Errorf("Failed to parse NUM_MESSAGES_PER_CALL: %v", err)
+	}
+
+	b.totalMsgCnt = b.numCycles * b.numGoRoutinesPerCycle * b.numMessagesPerCall
+
+	return nil
+}
 
 func main() {
+	var cfg benchmarkConfig
+	if err := cfg.Init(); err != nil {
+		panic(err)
+	}
+
 	ctx := context.Background()
 
 	// Initialize Dapr client
@@ -43,28 +81,43 @@ func main() {
 	}
 	defer client.Close()
 
-	// Publish messages in cycles
-	for i := range numCycles {
-		sendBatch(ctx, client, i)
+	if cfg.numCycles > 0 {
+		publishBenchmarkData(ctx, client, cfg)
+	} else {
+		publishDataContinuously(ctx, client, cfg)
 	}
 
 	fmt.Println("data published")
 }
 
-func sendBatch(ctx context.Context, client dapr.Client, batchNumber int) {
+func publishBenchmarkData(ctx context.Context, client dapr.Client, cfg benchmarkConfig) {
+	for i := range cfg.numCycles {
+		sendBatch(ctx, client, cfg, i)
+		fmt.Printf("Batch %d completed\n", i)
+	}
+}
+
+func publishDataContinuously(ctx context.Context, client dapr.Client, cfg benchmarkConfig) {
+	for {
+		sendBatch(ctx, client, cfg, 0)
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func sendBatch(ctx context.Context, client dapr.Client, cfg benchmarkConfig, batchNumber int) {
 	var wg sync.WaitGroup
 
-	for i := range numGoRoutinesPerCycle {
+	for i := range cfg.numGoRoutinesPerCycle {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 
 			var publishEventsData []interface{}
-			for j := 0; j < numMessagesPerCall; j++ {
+			for j := 0; j < cfg.numMessagesPerCall; j++ {
 				message := map[string]string{
 					"id":      fmt.Sprintf("id-%d-%d-%d", batchNumber, i, j),
 					"message": fmt.Sprintf("data-%d-%d-%d", batchNumber, i, j),
-					"cnt":     strconv.Itoa(totalMsgCnt),
+					"cnt":     strconv.Itoa(cfg.totalMsgCnt),
 				}
 
 				data, err := json.Marshal(message)
@@ -77,13 +130,13 @@ func sendBatch(ctx context.Context, client dapr.Client, batchNumber int) {
 			}
 
 			// Publish multiple events
-			if res := client.PublishEvents(ctx, pubsubName, topicName, publishEventsData, dapr.PublishEventsWithContentType("application/json")); res.Error != nil {
+			if res := client.PublishEvents(ctx, cfg.pubsubName, cfg.topicName, publishEventsData, dapr.PublishEventsWithContentType("application/json")); res.Error != nil {
 				panic(res.Error)
 			}
+			fmt.Println("Published", len(publishEventsData), "events")
 		}(i)
 	}
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-	fmt.Printf("Batch %d completed\n", batchNumber)
 }

@@ -1,0 +1,48 @@
+# deployments/regular-subscriber-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: regular-subscriber
+  namespace: default
+  labels:
+    app: regular-subscriber
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: regular-subscriber
+  template:
+    metadata:
+      labels:
+        app: regular-subscriber
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "regular-subscriber"
+        dapr.io/app-port: "50051"
+        dapr.io/app-protocol: "grpc"
+    spec:
+      containers:
+      - name: regular-subscriber
+        image: regular-subscriber:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 50051
+        env:
+        - name: PUBSUB_NAME
+          value: "mypubsub"
+        - name: TOPIC_NAME
+          value: "mytopic"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: regular-subscriber
+  namespace: default
+spec:
+  selector:
+    app: regular-subscriber
+  ports:
+    - protocol: TCP
+      port: 50051       # External port
+      targetPort: 50051  # Port on the container
+  type: ClusterIP        # Change to NodePort or LoadBalancer for external access

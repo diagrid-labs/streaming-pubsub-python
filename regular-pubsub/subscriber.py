@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------
+import os
 import time
 from threading import Lock
 
@@ -21,33 +22,20 @@ import json
 
 app = App()
 
-start_time = 0
-counter = 0
-counter_lock = Lock()
-TOPIC_NAME = 'my_topic'
-pubsub_name = 'my_pubsub'
+TOPIC_NAME = os.getenv('TOPIC_NAME', 'mytopic')
+PUBSUB_NAME = os.getenv('PUBSUB_NAME', 'mypubsub')
 
 
-@app.subscribe(pubsub_name=pubsub_name, topic=TOPIC_NAME)
+@app.subscribe(pubsub_name=PUBSUB_NAME, topic=TOPIC_NAME)
 def mytopic(event: v1.Event) -> TopicEventResponse:
-    global start_time
-
     data = json.loads(event.Data())
 
-    with counter_lock:  # Acquire the lock before modifying counter
-        global counter
-        if counter == 0:
-            start_time = time.time()
-        counter += 1
-
-        print(
-            f'Subscriber received: id={data["id"]}, message="{data["message"]}", cnt="{data["cnt"]}"',
-            flush=True)
-
-        if counter == int(data["cnt"]):
-            print(f'Time taken to receive {counter} messages: {time.time() - start_time}', flush=True)
+    print(
+        f'Subscriber received: id={data["id"]}, message="{data["message"]}", cnt="{data["cnt"]}"',
+        flush=True)
 
     return TopicEventResponse('success')
 
 app.register_health_check(lambda: print('Healthy'))
+print('Starting server...')
 app.run(50051)

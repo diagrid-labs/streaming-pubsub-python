@@ -1,0 +1,2 @@
+dapr-dev @ git+https://github.com/dapr/python-sdk.git@b97d68ff9ea6ca1161fe244f002134461bc49f8e
+dapr-ext-grpc==1.14.0

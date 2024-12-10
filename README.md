@@ -29,6 +29,11 @@ Also make sure the details of the default Redis component in the `../components`
 The publisher is written in Go, to make use of goroutines
 ```bash
 cd publisher
+export PUBSUB_NAME=pubsub
+export TOPIC_NAME=mytopic
+export NUM_CYCLES=10
+export NUM_MESSAGES_PER_CALL=100
+export NUM_GOROUTINES_PER_CYCLE=100
 dapr run --app-id python-publisher --app-protocol grpc --enable-app-health-check --resources-path=../components -- go run main.go
 ```
 
