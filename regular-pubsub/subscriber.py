@@ -31,7 +31,7 @@ def mytopic(event: v1.Event) -> TopicEventResponse:
     data = json.loads(event.Data())
 
     print(
-        f'Subscriber received: id={data["id"]}, message="{data["message"]}", cnt="{data["cnt"]}"',
+        f'Subscriber received: id={data["id"]}, message="{data["message"]}"',
         flush=True)
 
     return TopicEventResponse('success')

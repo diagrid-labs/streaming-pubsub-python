@@ -1,8 +1,9 @@
-# Streaming benchmark in the Dapr python-sdk
+# Streaming PubSub in the Dapr Python SDK
 
-This benchmark compares the performance of regular pub/sub and streaming pub/sub features in the Dapr Python SDK. It includes a Go-based publisher to simulate high-throughput scenarios.
+These examples demonstrate how to use the Dapr Python SDK to create a subscriber application that listens to a topic and receives messages from a publisher application. The subscriber application can be run in two modes: regular subscription and streaming subscription.
 
-## Prerequisites
+## Running in self-hosted mode
+### Prerequisites for running locally
 **1. Install Dapr CLI and Runtime**  
 Ensure that you have Dapr installed on your system:
 ```bash
@@ -20,20 +21,18 @@ pip3 install -r requirements.txt
 ```
 
 4. Configure Components
-This benchmark uses Redis as the pub/sub broker. Ensure Redis is installed and running locally.
+This example uses Redis as the pub/sub broker. Ensure Redis is installed and running locally.
 Also make sure the details of the default Redis component in the `../components` directory match your local Redis installation. Refer to the Dapr pub/sub documentation for details.
 
-## Run the example
+### Run the example: self-hosted mode
 
 1. Run the publisher  
 The publisher is written in Go, to make use of goroutines
 ```bash
-cd publisher
-export PUBSUB_NAME=pubsub
+export PUBSUB_NAME=mypubsub
 export TOPIC_NAME=mytopic
-export NUM_CYCLES=10
-export NUM_MESSAGES_PER_CALL=100
-export NUM_GOROUTINES_PER_CYCLE=100
+export NUM_MESSAGES_PER_CALL=10
+cd publisher
 dapr run --app-id python-publisher --app-protocol grpc --enable-app-health-check --resources-path=../components -- go run main.go
 ```
 
@@ -47,10 +46,23 @@ dapr run --app-id python-subscriber --app-protocol grpc --app-port 50051 --resou
 3. Run the subscriber with streaming subscription
 ```bash
 cd streaming-pubsub
-dapr run --app-id python-subscriber --resources-path=../components -- python3 subscriber.py
+dapr run --app-id python-subscriber --resources-path=../components -- python3 subscriber-handler.py
 ```
 
-## Monitoring the Benchmark
-Observe the logs of both the publisher and subscriber to verify message flow and measure performance.
-Compare the message throughput and latency between regular pub/sub and streaming pub/sub.
-You can tweak the number of sent messages through the `numGoRoutinesPerCycle`, `numMessagesPerCall` and `totalMsgCnt` variables in the [publisher](publisher/main.go) to simulate different scenarios.
+## Running in Kubernetes
+
+
+### Prerequisites for running in Kubernetes
+- A Kubernetes cluster
+
+### Run the example
+
+Run the setup script:
+```bash
+./setup.sh
+```
+
+The script will set the context to `kind-kind`, but you can override this by running it with the desired context as the first argument:
+```
+./setup.sh mycontext
+```

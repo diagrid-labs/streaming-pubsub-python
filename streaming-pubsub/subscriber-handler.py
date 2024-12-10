@@ -6,15 +6,14 @@ from dapr.clients import DaprClient
 from dapr.clients.grpc._response import TopicEventResponse
 
 
-TOPIC_NAME = os.getenv('TOPIC_NAME', 'my_topic')
+TOPIC_NAME = os.getenv('TOPIC_NAME', 'mytopic')
 PUBSUB_NAME = os.getenv('PUBSUB_NAME', 'mypubsub')
 
 
 def process_message(message):
     data = message.data()
 
-    print(f'Subscriber received: id={data["id"]}, message="{data["message"]}", cnt="{data["cnt"]}"',
-          flush=True)
+    print(f'Subscriber received: id={data["id"]}, message="{data["message"]}"', flush=True)
 
     return TopicEventResponse('success')
 
