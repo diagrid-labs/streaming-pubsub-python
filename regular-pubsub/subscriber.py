@@ -15,24 +15,23 @@ import time
 from threading import Lock
 
 from cloudevents.sdk.event import v1
-from dapr.ext.grpc import App
 from dapr.clients.grpc._response import TopicEventResponse
+from dapr.ext.grpc import App
 
 import json
 
-app = App()
 
 TOPIC_NAME = os.getenv('TOPIC_NAME', 'mytopic')
 PUBSUB_NAME = os.getenv('PUBSUB_NAME', 'mypubsub')
 
+app = App()
 
 @app.subscribe(pubsub_name=PUBSUB_NAME, topic=TOPIC_NAME)
 def mytopic(event: v1.Event) -> TopicEventResponse:
     data = json.loads(event.Data())
 
     print(
-        f'Subscriber received: id={data["id"]}, message="{data["message"]}"',
-        flush=True)
+        f'Subscriber received: id={data["id"]}, message="{data["message"]}"', flush=True)
 
     return TopicEventResponse('success')
 

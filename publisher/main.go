@@ -15,19 +15,16 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	dapr "github.com/dapr/go-sdk/client"
 )
 
 type benchmarkConfig struct {
-	pubsubName         string
-	topicName          string
-	numMessagesPerCall int
+	pubsubName string
+	topicName  string
 }
 
 func (b *benchmarkConfig) Init() error {
@@ -38,12 +35,6 @@ func (b *benchmarkConfig) Init() error {
 	b.topicName = os.Getenv("TOPIC_NAME")
 	if b.topicName == "" {
 		return fmt.Errorf("TOPIC_NAME is not set")
-	}
-
-	var err error
-	b.numMessagesPerCall, err = strconv.Atoi(os.Getenv("NUM_MESSAGES_PER_CALL"))
-	if err != nil {
-		return fmt.Errorf("Failed to parse NUM_MESSAGES_PER_CALL: %v", err)
 	}
 
 	return nil
@@ -69,27 +60,17 @@ func main() {
 
 func publishData(ctx context.Context, client dapr.Client, cfg benchmarkConfig) {
 	for {
-		var publishEventsData []interface{}
-		for j := 0; j < cfg.numMessagesPerCall; j++ {
-			message := map[string]string{
-				"id":      fmt.Sprintf("id-%d", j),
-				"message": fmt.Sprintf("data-%d", j),
-			}
-
-			data, err := json.Marshal(message)
-			if err != nil {
-				fmt.Printf("Error marshalling message: %v\n", err)
-				continue
-			}
-
-			publishEventsData = append(publishEventsData, data)
+		message := map[string]string{
+			"id":      fmt.Sprintf("id-%d", time.Now().UnixNano()),
+			"message": fmt.Sprintf("data-%d", time.Now().UnixNano()),
 		}
 
-		// Publish multiple events
-		if res := client.PublishEvents(ctx, cfg.pubsubName, cfg.topicName, publishEventsData, dapr.PublishEventsWithContentType("application/json")); res.Error != nil {
-			panic(res.Error)
+		err := client.PublishEvent(context.Background(), cfg.pubsubName, cfg.topicName, message, dapr.PublishEventWithContentType("application/json"))
+		if err != nil {
+			panic(err)
 		}
-		fmt.Println("Published", len(publishEventsData), "events")
+
+		fmt.Println("Published event:", message["id"])
 
 		time.Sleep(2 * time.Second)
 	}
