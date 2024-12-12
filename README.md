@@ -31,7 +31,6 @@ The publisher is written in Go, to make use of goroutines
 ```bash
 export PUBSUB_NAME=mypubsub
 export TOPIC_NAME=mytopic
-export NUM_MESSAGES_PER_CALL=10
 cd publisher
 dapr run --app-id python-publisher --app-protocol grpc --enable-app-health-check --resources-path=../components -- go run main.go
 ```
