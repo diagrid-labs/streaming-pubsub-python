@@ -11,8 +11,6 @@
 # limitations under the License.
 # ------------------------------------------------------------
 import os
-import time
-from threading import Lock
 
 from cloudevents.sdk.event import v1
 from dapr.clients.grpc._response import TopicEventResponse
